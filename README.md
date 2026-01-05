@@ -1,2 +1,2 @@
 # WindowsSampleProjectC27lyFramework
-工作中开发的windows使用的简单游戏前端程序的unity框架
+工作中开发的windows简单游戏前端程序的unity框架
