@@ -8,8 +8,8 @@ using I2.Loc;
 #endif
 using UnityEngine;
 
-//todo:ÕâĞ©´úÂëÒª¼ÓÒ»¸öÕıÔÚÇĞ»»µÄ×´Ì¬ĞèÒªÊ¹ÓÃunitask½øĞĞÓÅ»¯
-//todo:ĞèÒªÒ»¸öyooassetÀ´½øĞĞ¼ÓÔØºÍÄÚ´æÊÍ·Å
+//todo:è¿™äº›ä»£ç è¦åŠ ä¸€ä¸ªæ­£åœ¨åˆ‡æ¢çš„çŠ¶æ€éœ€è¦ä½¿ç”¨unitaskè¿›è¡Œä¼˜åŒ–
+//todo:éœ€è¦ä¸€ä¸ªyooassetæ¥è¿›è¡ŒåŠ è½½å’Œå†…å­˜é‡Šæ”¾
 public partial class UIController : MonoSingleton<UIController>
 {
     private Dictionary<string, IUIElement> uis = new Dictionary<string, IUIElement>();
@@ -20,7 +20,7 @@ public partial class UIController : MonoSingleton<UIController>
 
     public List<string> defaultUIs = new ();
     
-    //TODO:ÕâÀï×öÒ»¸öuiÔÚÆô¶¯Ê±¾Í´Óab°üÖĞ»º´æ²¢ÇÒÒ»Ö±´æÔÚµÄÁĞ±í ¸ÄÔì»¹ĞèÒª¼ÌĞø2026/1/5
+    //TODO:è¿™é‡Œåšä¸€ä¸ªuiåœ¨å¯åŠ¨æ—¶å°±ä»abåŒ…ä¸­ç¼“å­˜å¹¶ä¸”ä¸€ç›´å­˜åœ¨çš„åˆ—è¡¨ æ”¹é€ è¿˜éœ€è¦ç»§ç»­2026/1/5
 
     public string CurrentUI => _currentUI;
     
@@ -55,7 +55,7 @@ public partial class UIController : MonoSingleton<UIController>
             }
             //Debug.Log("name:"+ name);
             uis.Add(ui.SelfUIName,ui);
-            //todo:ÆäÊµÕâÀïÊ¹ÓÃ·´Éä»òÕßactionÖ®ÀàµÄ»áºÃÒ»Ğ©±£Ö¤½Ó¿ÚµÄ·â×°ĞÔ
+            //todo:å…¶å®è¿™é‡Œä½¿ç”¨åå°„æˆ–è€…actionä¹‹ç±»çš„ä¼šå¥½ä¸€äº›ä¿è¯æ¥å£çš„å°è£…æ€§
             ((IUIElement)ui).Init();
         }
         this.ResetUI();
@@ -94,7 +94,7 @@ public partial class UIController : MonoSingleton<UIController>
     {
         if (!uis.ContainsKey(uiName))
         {
-            Debug.LogError(uiName + "UI²»´æÔÚ");
+            Debug.LogError(uiName + "UIä¸å­˜åœ¨");
             return;
         }
         if (_currentUI != "" && uis.ContainsKey(_currentUI))
@@ -119,7 +119,7 @@ public partial class UIController : MonoSingleton<UIController>
     {
         if (_isChangingCurrentUI)
         {
-            Debug.Log(uiName + "Ò³ÃæÎŞ·¨ÇĞ»»ÒòÎª" + _currentUI + "ÕıÔÚÇĞ»»");
+            Debug.Log(uiName + "é¡µé¢æ— æ³•åˆ‡æ¢å› ä¸º" + _currentUI + "æ­£åœ¨åˆ‡æ¢");
             return;
         }
         if (delay <= 0)
@@ -164,7 +164,7 @@ public partial class UIController : MonoSingleton<UIController>
     {
         if (!uis.ContainsKey(uiName))
         {
-            Debug.LogError(uiName + "UI²»´æÔÚ");
+            Debug.LogError(uiName + "UIä¸å­˜åœ¨");
             return false;
         }
         return true;

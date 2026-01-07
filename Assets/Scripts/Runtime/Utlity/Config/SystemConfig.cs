@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 public class SystemConfig : Singleton<SystemConfig>
 {
-	#region »ù´¡²ÎÊı
+	#region åŸºç¡€å‚æ•°
 	public APP_STYLE AppWindowStyle;
 	public Z_DEPTH ScreenDepth;
 	public int windowLeft;
@@ -22,7 +22,7 @@ public class SystemConfig : Singleton<SystemConfig>
 	public const int GWL_STYLE = -16;
 	public const int WS_BORDER = 1;
 	public const int SW_SHOWRESTORE = 1;
-	public const int SW_SHOWMINIMIZED = 2; //{×îĞ¡»¯, ¼¤»î}
+	public const int SW_SHOWMINIMIZED = 2; //{æœ€å°åŒ–, æ¿€æ´»}
 	public const int SW_SHOWMAXIMIZED = 3;
 	public const int GWL_EXSTYLE = -20;
 	public const int WS_CAPTION = 12582912;
@@ -43,18 +43,18 @@ public class SystemConfig : Singleton<SystemConfig>
 	    
 	public enum APP_STYLE
 	{
-		WindowedFullScreen,				//È«ÆÁ
-		Windowed,						//´°¿Ú»¯
-		WindowedWithoutBorder,			//´°¿Ú»¯ÎŞ±ß¿ò
-		WindowMin						//×îĞ¡»¯
+		WindowedFullScreen,				//å…¨å±
+		Windowed,						//çª—å£åŒ–
+		WindowedWithoutBorder,			//çª—å£åŒ–æ— è¾¹æ¡†
+		WindowMin						//æœ€å°åŒ–
 	}
 
 	public enum Z_DEPTH
 	{
-		Bottom = -1,					//×îµ×²¿
-		Normal,							//Õı³£
-		Top,							//Æô¶¯Ê±ÖÃ¶¥
-		TopMost							//ÓÀ¾ÃÖÃ¶¥
+		Bottom = -1,					//æœ€åº•éƒ¨
+		Normal,							//æ­£å¸¸
+		Top,							//å¯åŠ¨æ—¶ç½®é¡¶
+		TopMost							//æ°¸ä¹…ç½®é¡¶
 	}
 	#endregion
 	
@@ -90,34 +90,34 @@ public class SystemConfig : Singleton<SystemConfig>
 		}
 		/*
 		 *
-		 * //ÕûÆÁËõ·Å£¬ÒÔ1920*1080Îª»ù×¼
+		 * //æ•´å±ç¼©æ”¾ï¼Œä»¥1920*1080ä¸ºåŸºå‡†
 		if (root != null)
 			root.localScale = new Vector3(this.windowWidth / 1920.0f, this.windowHeight/ 1080.0f, 1);
-		// todo: ¶ÁÈ¡Íê±ÏÖ®ºóÊ¹ÓÃunitaskÀ´µ÷ÓÃsystemcontrollerÀ´ÊµÏÖ³õÊ¼»¯(ÒÑÍê³É)
+		// todo: è¯»å–å®Œæ¯•ä¹‹åä½¿ç”¨unitaskæ¥è°ƒç”¨systemcontrolleræ¥å®ç°åˆå§‹åŒ–(å·²å®Œæˆ)
 		Init();*/
 	}
 
 	private void SetDefaultValue(Dictionary<string, string> infoDic)
 	{
-		//´°¿ÚÆ«ÒÆ
+		//çª—å£åç§»
 		windowLeft = int.Parse(infoDic["left"]);
 		windowTop = int.Parse(infoDic["top"]);
-		//·Ö±æÂÊ
+		//åˆ†è¾¨ç‡
 		windowWidth = int.Parse(infoDic["width"]);
 		windowHeight = int.Parse(infoDic["height"]);
-		//Êó±ê
+		//é¼ æ ‡
 		CursorVisible = infoDic["showmouse"] == "true" ? true : false;
-		//È«ÆÁ È«ÆÁ=0 ´°¿Ú=1 ´°¿ÚÎŞ±ß¿ò=2 ×îĞ¡»¯=3
+		//å…¨å± å…¨å±=0 çª—å£=1 çª—å£æ— è¾¹æ¡†=2 æœ€å°åŒ–=3
 		AppWindowStyle = (APP_STYLE)(int.Parse(infoDic["fullscreen"]));
-		//ÖÃ¶¥ ÖÃµ×=-1 ÆÕÍ¨=0 ¿ªÆôÊ±ÖÃ¶¥=1 ÓÀ¾ÃÖÃ¶¥=2
+		//ç½®é¡¶ ç½®åº•=-1 æ™®é€š=0 å¼€å¯æ—¶ç½®é¡¶=1 æ°¸ä¹…ç½®é¡¶=2
 		ScreenDepth = (Z_DEPTH)(int.Parse(infoDic["screendepth"]));
-		//ÈÕÖ¾¹ıÂË È«²¿=0 WarningÒÔÉÏ=1 AssertÒÔÉÏ=2 ErrorÒÔÉÏ=3 ²»Êä³ö=4
+		//æ—¥å¿—è¿‡æ»¤ å…¨éƒ¨=0 Warningä»¥ä¸Š=1 Assertä»¥ä¸Š=2 Errorä»¥ä¸Š=3 ä¸è¾“å‡º=4
 		logType = (LogFile.LOG_TYPE)(int.Parse(infoDic["logtype"]));
-		//ÈÕÖ¾
+		//æ—¥å¿—
 		log = infoDic["log"] == "true" ? true : false;
-		//Ö¡Êı
+		//å¸§æ•°
 		FrameRate = int.Parse(infoDic["framerate"]);
-		//´ı»úÊ±¼ä
+		//å¾…æœºæ—¶é—´
 		backTime = int.Parse(infoDic["backtime"]);
 		//logo
 		logo = infoDic["logo"] == "true" ? true : false;
