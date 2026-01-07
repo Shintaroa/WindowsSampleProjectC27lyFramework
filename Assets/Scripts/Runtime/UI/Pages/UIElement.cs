@@ -36,7 +36,7 @@ public class UIElement : MonoBehaviour,IUIElement
     public float DisappearTime => disappearTime;
     public string SelfUIName { get; set; }
 
-    #region 通过接口封装代码
+    #region
     void IUIElement.Init()
     {
         Init();
