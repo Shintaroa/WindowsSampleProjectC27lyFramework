@@ -3,25 +3,25 @@ using System;
 using UnityEngine;
 using DG.Tweening;
 
-//TODO: dotweenÓĞunitaskµÄÍØÕ¹ÒÔºó¿ÉÒÔÓÅ»¯ 2026/1/5
+//TODO: dotweenæœ‰unitaskçš„æ‹“å±•ä»¥åå¯ä»¥ä¼˜åŒ– 2026/1/5
 public class UIAnimator : MonoBehaviour
 {
-    public GameObject[] uiElements; // ÔÚInspectorÖĞÉèÖÃÒªÒÀ´Îµ¯³öµÄUIÔªËØ
-    public AnimationType[] animationTypes; // ÎªÃ¿¸öÔªËØÉèÖÃ¶¯»­ÀàĞÍ
-    public float duration = 0.5f; // ¶¯»­³ÖĞøÊ±¼ä
-    public float delayBetweenElements = 0.2f; // ÔªËØÖ®¼äµÄÑÓ³Ù
-    public float flyDistance = 500f; // ´Óµ×²¿·ÉÈëµÄ¾àÀë
+    public GameObject[] uiElements; // åœ¨Inspectorä¸­è®¾ç½®è¦ä¾æ¬¡å¼¹å‡ºçš„UIå…ƒç´ 
+    public AnimationType[] animationTypes; // ä¸ºæ¯ä¸ªå…ƒç´ è®¾ç½®åŠ¨ç”»ç±»å‹
+    public float duration = 0.5f; // åŠ¨ç”»æŒç»­æ—¶é—´
+    public float delayBetweenElements = 0.2f; // å…ƒç´ ä¹‹é—´çš„å»¶è¿Ÿ
+    public float flyDistance = 500f; // ä»åº•éƒ¨é£å…¥çš„è·ç¦»
     public bool hasScaleChange = false;
     public bool initOnAwake = true;
     private bool _isInit = false;
     
-    // ±£´æÔ­Ê¼Î»ÖÃºÍËõ·Å×´Ì¬
+    // ä¿å­˜åŸå§‹ä½ç½®å’Œç¼©æ”¾çŠ¶æ€
     private Vector3[] _originalPositions;
     private Vector3[] _originalScales;
 
     private Coroutine _disableCoroutine;
 
-    public enum AnimationType // ¶¨Òå¶¯»­ÀàĞÍ
+    public enum AnimationType // å®šä¹‰åŠ¨ç”»ç±»å‹
     {
         Pop,
         Fade,
@@ -45,47 +45,47 @@ public class UIAnimator : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            AnimateUIElements();//Èë³¡
+            AnimateUIElements();//å…¥åœº
         }
         else if (Input.GetKeyDown(KeyCode.Return))
         {
-            AnimateUIElementsOut();//ÍË³¡
+            AnimateUIElementsOut();//é€€åœº
         }
     }
 #endif    
     
     private void InitializeUIElements()
     {
-        // ¼ì²éÊı×é³¤¶ÈÊÇ·ñÆ¥Åä
+        // æ£€æŸ¥æ•°ç»„é•¿åº¦æ˜¯å¦åŒ¹é…
         if (uiElements.Length == 0 || animationTypes.Length != uiElements.Length)
         {
-            Debug.LogError("UIÔªËØºÍ¶¯»­ÀàĞÍÊı×é³¤¶È²»Æ¥Åä£¡");
+            Debug.LogError("UIå…ƒç´ å’ŒåŠ¨ç”»ç±»å‹æ•°ç»„é•¿åº¦ä¸åŒ¹é…ï¼");
             return;
         }
 
-        // ³õÊ¼»¯Ô­Ê¼Î»ÖÃºÍËõ·ÅÊı×é
+        // åˆå§‹åŒ–åŸå§‹ä½ç½®å’Œç¼©æ”¾æ•°ç»„
         _originalPositions = new Vector3[uiElements.Length];
         _originalScales = new Vector3[uiElements.Length];
 
         for (int i = 0; i < uiElements.Length; i++)
         {
             var element = uiElements[i];
-            _originalPositions[i] = element.transform.localPosition; // ±£´æÔ­Ê¼Î»ÖÃ
-            _originalScales[i] = element.transform.localScale; // ±£´æÔ­Ê¼Ëõ·Å
+            _originalPositions[i] = element.transform.localPosition; // ä¿å­˜åŸå§‹ä½ç½®
+            _originalScales[i] = element.transform.localScale; // ä¿å­˜åŸå§‹ç¼©æ”¾
 
-            // ¼ì²é²¢Ìí¼Ó CanvasGroup ×é¼ş
+            // æ£€æŸ¥å¹¶æ·»åŠ  CanvasGroup ç»„ä»¶
             CanvasGroup canvasGroup = element.GetComponent<CanvasGroup>();
             if (canvasGroup == null)
             {
                 canvasGroup = element.AddComponent<CanvasGroup>();
             }
-            // ³õÊ¼»¯ÎªÍ¸Ã÷²¢Ëõ·ÅÎª0£¬²¢ÇÒÒş²ØËùÓĞÔªËØ
+            // åˆå§‹åŒ–ä¸ºé€æ˜å¹¶ç¼©æ”¾ä¸º0ï¼Œå¹¶ä¸”éšè—æ‰€æœ‰å…ƒç´ 
             if (hasScaleChange || animationTypes[i] == AnimationType.Bounce || animationTypes[i] == AnimationType.Pop)
             {
                 element.transform.localScale = Vector3.zero;
             }
             canvasGroup.alpha = 0;
-            element.SetActive(false); // Òş²ØUIÔªËØ
+            element.SetActive(false); // éšè—UIå…ƒç´ 
         }
         _isInit = true;
     }
@@ -99,67 +99,67 @@ public class UIAnimator : MonoBehaviour
         for (int i = 0; i < uiElements.Length; i++)
         {
             var element = uiElements[i];
-            // Èç¹û¸ÃÔªËØÒÑ¾­¼¤»î²¢ÓĞ¶¯»­ÔÚ½øĞĞ£¬Ìø³öÑ­»·
+            // å¦‚æœè¯¥å…ƒç´ å·²ç»æ¿€æ´»å¹¶æœ‰åŠ¨ç”»åœ¨è¿›è¡Œï¼Œè·³å‡ºå¾ªç¯
             //if (element.activeSelf) continue;
 
-            // Í£Ö¹¸ÃÔªËØµÄËùÓĞ¶¯»­
+            // åœæ­¢è¯¥å…ƒç´ çš„æ‰€æœ‰åŠ¨ç”»
             element.transform.DOKill();
             CanvasGroup canvasGroup = element.GetComponent<CanvasGroup>();
 
-            // ÖØÖÃ×´Ì¬ÎªÍ¸Ã÷²¢Ëõ·ÅÎª³õÊ¼×´Ì¬
+            // é‡ç½®çŠ¶æ€ä¸ºé€æ˜å¹¶ç¼©æ”¾ä¸ºåˆå§‹çŠ¶æ€
             if (hasScaleChange || animationTypes[i] == AnimationType.Bounce || animationTypes[i] == AnimationType.Pop)
             {
                 element.transform.localScale = Vector3.zero;
             }
             canvasGroup.alpha = 0;
 
-            // ¼¤»îUIÔªËØ
+            // æ¿€æ´»UIå…ƒç´ 
             element.SetActive(true);
 
-            // ¸ù¾İ¶¯»­ÀàĞÍÖ´ĞĞ²»Í¬µÄ¶¯»­
+            // æ ¹æ®åŠ¨ç”»ç±»å‹æ‰§è¡Œä¸åŒçš„åŠ¨ç”»
             AnimationType currentAnimation = animationTypes[i];
 
             switch (currentAnimation)
             {
-                case AnimationType.Pop: // µ¯³ö
+                case AnimationType.Pop: // å¼¹å‡º
                     element.transform.DOScale(_originalScales[i], duration).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(1, duration).SetDelay(i * delayBetweenElements);
                     break;
 
-                case AnimationType.Fade: // µ­Èë
+                case AnimationType.Fade: // æ·¡å…¥
                     if (hasScaleChange)
                         element.transform.DOScale(_originalScales[i], duration).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(1, duration).SetDelay(i * delayBetweenElements);
                     break;
 
-                case AnimationType.Bounce: // µ¯Ìø
+                case AnimationType.Bounce: // å¼¹è·³
                     element.transform.DOScale(_originalScales[i], duration).SetEase(Ease.OutBounce).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(1, duration).SetDelay(i * delayBetweenElements);
                     break;
 
-                case AnimationType.FlyFromBottom: // ´Óµ×²¿·Éµ½Ô­Î»ÖÃ
-                    element.transform.localPosition = _originalPositions[i] + new Vector3(0, -flyDistance, 0); // ´Ó³õÊ¼»¯Î»ÖÃÆ«ÒÆ
+                case AnimationType.FlyFromBottom: // ä»åº•éƒ¨é£åˆ°åŸä½ç½®
+                    element.transform.localPosition = _originalPositions[i] + new Vector3(0, -flyDistance, 0); // ä»åˆå§‹åŒ–ä½ç½®åç§»
                     element.transform.DOLocalMove(_originalPositions[i], duration).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(1, duration).SetDelay(i * delayBetweenElements);
                     if (hasScaleChange)
                         element.transform.DOScale(_originalScales[i], duration).SetDelay(i * delayBetweenElements);
                     break;
                 case AnimationType.FlyFromTop:
-                    element.transform.localPosition = _originalPositions[i] + new Vector3(0, flyDistance, 0); // ´Ó³õÊ¼»¯Î»ÖÃÆ«ÒÆ
+                    element.transform.localPosition = _originalPositions[i] + new Vector3(0, flyDistance, 0); // ä»åˆå§‹åŒ–ä½ç½®åç§»
                     element.transform.DOLocalMove(_originalPositions[i], duration).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(1, duration).SetDelay(i * delayBetweenElements);
                     if (hasScaleChange)
                         element.transform.DOScale(_originalScales[i], duration).SetDelay(i * delayBetweenElements);
                     break;
                 case AnimationType.FlyFromLeft:
-                    element.transform.localPosition = _originalPositions[i] + new Vector3(-flyDistance, 0, 0); // ´Ó³õÊ¼»¯Î»ÖÃÆ«ÒÆ
+                    element.transform.localPosition = _originalPositions[i] + new Vector3(-flyDistance, 0, 0); // ä»åˆå§‹åŒ–ä½ç½®åç§»
                     element.transform.DOLocalMove(_originalPositions[i], duration).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(1, duration).SetDelay(i * delayBetweenElements);
                     if (hasScaleChange)
                         element.transform.DOScale(_originalScales[i], duration).SetDelay(i * delayBetweenElements);
                     break;
                 case AnimationType.FlyFromRight:
-                    element.transform.localPosition = _originalPositions[i] + new Vector3(flyDistance, 0, 0); // ´Ó³õÊ¼»¯Î»ÖÃÆ«ÒÆ
+                    element.transform.localPosition = _originalPositions[i] + new Vector3(flyDistance, 0, 0); // ä»åˆå§‹åŒ–ä½ç½®åç§»
                     element.transform.DOLocalMove(_originalPositions[i], duration).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(1, duration).SetDelay(i * delayBetweenElements);
                     if (hasScaleChange)
@@ -174,53 +174,53 @@ public class UIAnimator : MonoBehaviour
         for (int i = 0; i < uiElements.Length; i++)
         {
             var element = uiElements[i];
-            // Èç¹û¸ÃÔªËØÃ»ÓĞ¼¤»î£¬ÔòÌø¹ı
+            // å¦‚æœè¯¥å…ƒç´ æ²¡æœ‰æ¿€æ´»ï¼Œåˆ™è·³è¿‡
             if (!element.activeSelf) continue;
 
-            // Í£Ö¹¸ÃÔªËØµÄËùÓĞ¶¯»­
+            // åœæ­¢è¯¥å…ƒç´ çš„æ‰€æœ‰åŠ¨ç”»
             element.transform.DOKill();
             CanvasGroup canvasGroup = element.GetComponent<CanvasGroup>();
 
-            // ¸ù¾İ¶¯»­ÀàĞÍÖ´ĞĞ²»Í¬µÄÍË³¡¶¯»­
+            // æ ¹æ®åŠ¨ç”»ç±»å‹æ‰§è¡Œä¸åŒçš„é€€åœºåŠ¨ç”»
             AnimationType currentAnimation = animationTypes[i];
 
             switch (currentAnimation)
             {
-                case AnimationType.Pop: // µ¯³ö
+                case AnimationType.Pop: // å¼¹å‡º
                     if (hasScaleChange)
                         element.transform.DOScale(Vector3.zero, duration);
                     canvasGroup.DOFade(0, duration);
                     break;
-                case AnimationType.Fade: // µ­³ö
+                case AnimationType.Fade: // æ·¡å‡º
                     if (hasScaleChange)
                         element.transform.DOScale(_originalScales[i], duration).SetDelay(i * delayBetweenElements);
                     canvasGroup.DOFade(0, duration);
                     break;
 
-                case AnimationType.Bounce: // µ¯Ìø
+                case AnimationType.Bounce: // å¼¹è·³
                     element.transform.DOScale(Vector3.zero, duration).SetEase(Ease.InBounce);
                     canvasGroup.DOFade(0, duration);
                     break;
 
-                case AnimationType.FlyFromBottom: // ´Óµ×²¿·É³öÈ¥
+                case AnimationType.FlyFromBottom: // ä»åº•éƒ¨é£å‡ºå»
                     //element.transform.DOLocalMove(_originalPositions[i] + new Vector3(0, -flyDistance, 0), duration);
                     canvasGroup.DOFade(0, duration);
                     if (hasScaleChange)
                         element.transform.DOScale(Vector3.zero, duration);
                     break;
-                case AnimationType.FlyFromTop: // ´Óµ×²¿·É³öÈ¥
+                case AnimationType.FlyFromTop: // ä»åº•éƒ¨é£å‡ºå»
                     //element.transform.DOLocalMove(_originalPositions[i] + new Vector3(0, flyDistance, 0), duration);
                     canvasGroup.DOFade(0, duration);
                     if (hasScaleChange)
                         element.transform.DOScale(Vector3.zero, duration);
                     break;
-                case AnimationType.FlyFromLeft: // ´Óµ×²¿·É³öÈ¥
+                case AnimationType.FlyFromLeft: // ä»åº•éƒ¨é£å‡ºå»
                     //element.transform.DOLocalMove(_originalPositions[i] + new Vector3(0, -flyDistance, 0), duration);
                     canvasGroup.DOFade(0, duration);
                     if (hasScaleChange)
                         element.transform.DOScale(Vector3.zero, duration);
                     break;
-                case AnimationType.FlyFromRight: // ´Óµ×²¿·É³öÈ¥
+                case AnimationType.FlyFromRight: // ä»åº•éƒ¨é£å‡ºå»
                     //element.transform.DOLocalMove(_originalPositions[i] + new Vector3(0, flyDistance, 0), duration);
                     canvasGroup.DOFade(0, duration);
                     if (hasScaleChange)
@@ -230,7 +230,7 @@ public class UIAnimator : MonoBehaviour
 
             if (gameObject.activeInHierarchy)
             {
-                // ¶¯»­Íê³Éºó½ûÓÃÔªËØ
+                // åŠ¨ç”»å®Œæˆåç¦ç”¨å…ƒç´ 
                 _disableCoroutine = StartCoroutine(DisableElementAfterAnimation(element, duration));
             }
         }

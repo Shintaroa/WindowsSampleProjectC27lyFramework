@@ -1,7 +1,8 @@
-﻿Assets/Log
-Library
+﻿Library
 Temp
 *.csproj
-obj
+*.sln
 Logs
 .idea
+obj
+Assets/Log
