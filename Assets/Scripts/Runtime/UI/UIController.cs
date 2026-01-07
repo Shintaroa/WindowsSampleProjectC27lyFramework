@@ -55,7 +55,6 @@ public partial class UIController : MonoSingleton<UIController>
             }
             //Debug.Log("name:"+ name);
             uis.Add(ui.SelfUIName,ui);
-            //todo:其实这里使用反射或者action之类的会好一些保证接口的封装性
             ((IUIElement)ui).Init();
         }
         this.ResetUI();
@@ -92,6 +91,11 @@ public partial class UIController : MonoSingleton<UIController>
 
     public async UniTask ChangeUI(string uiName)
     {
+        if (_isChangingCurrentUI)
+        {
+            Debug.Log(uiName + "页面无法切换因为" + _currentUI + "正在切换");
+            return;
+        }
         if (!uis.ContainsKey(uiName))
         {
             Debug.LogError(uiName + "UI不存在");
@@ -102,8 +106,8 @@ public partial class UIController : MonoSingleton<UIController>
             _openedUIs.Remove(_currentUI);
             uis[_currentUI].OnCloseUI();
             _isChangingCurrentUI = true;
-            //await UniTask.Delay(TimeSpan.FromSeconds(uis[uiName].DisappearTime), ignoreTimeScale: false, cancellationToken: _currentCancellationToken.Token);
-            await UniTask.Delay(TimeSpan.FromSeconds(uis[uiName].DisappearTime), ignoreTimeScale: false);
+            await UniTask.Delay(TimeSpan.FromSeconds(uis[uiName].DisappearTime), ignoreTimeScale: false, cancellationToken: _currentCancellationToken.Token);
+            //await UniTask.Delay(TimeSpan.FromSeconds(uis[uiName].DisappearTime), ignoreTimeScale: false);
             _isChangingCurrentUI = false;
             uis[_currentUI].OnCloseOverDisappearTimeUI();
             uis[_currentUI].SetActive(false);
@@ -117,11 +121,6 @@ public partial class UIController : MonoSingleton<UIController>
     
     public async UniTask OpenUI(string uiName, float delay = 0)
     {
-        if (_isChangingCurrentUI)
-        {
-            Debug.Log(uiName + "页面无法切换因为" + _currentUI + "正在切换");
-            return;
-        }
         if (delay <= 0)
         {
             OpenUI(uiName, false);
@@ -141,6 +140,11 @@ public partial class UIController : MonoSingleton<UIController>
         }
         if (isCurrentMainUI)
         {
+            if (_isChangingCurrentUI)
+            {
+                Debug.Log(uiName + "页面无法切换因为" + _currentUI + "正在切换");
+                return;
+            }
             _currentUI = uiName;
         }
         _openedUIs.Add(uiName);
