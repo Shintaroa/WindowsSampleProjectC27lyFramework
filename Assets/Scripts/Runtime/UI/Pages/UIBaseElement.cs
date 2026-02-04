@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 #if MOREMOUNTAINS_FEEDBACKS
     using MoreMountains.Feedbacks;
 #endif
@@ -7,7 +8,6 @@ using UnityEngine.UI;
 
 public interface IUIElement
 {
-    string SelfUIName { get; set; }
     float DisappearTime { get; }
     void Init(){}
     void OnOpenUI();
@@ -16,7 +16,7 @@ public interface IUIElement
     void SetActive(bool isActive);
 }
 
-public class UIElement : MonoBehaviour,IUIElement
+public class UIBaseElement : MonoBehaviour,IUIElement
 {
     public float disappearTime = 0.5f;
 
@@ -34,7 +34,6 @@ public class UIElement : MonoBehaviour,IUIElement
     public string backPageName = UIPath.UIIdle;
 
     public float DisappearTime => disappearTime;
-    public string SelfUIName { get; set; }
 
     #region
     void IUIElement.Init()
@@ -109,7 +108,7 @@ public class UIElement : MonoBehaviour,IUIElement
     
     protected virtual void OnBackButtonClicked()
     {
-        UIController.Instance.ChangeUI(backPageName);
+        UIController.Instance.ChangeUI(backPageName).Forget();
     }
 
 

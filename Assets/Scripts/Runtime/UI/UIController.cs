@@ -14,7 +14,7 @@ public partial class UIController : MonoSingleton<UIController>
 {
     private Dictionary<string, IUIElement> uis = new Dictionary<string, IUIElement>();
 
-    public List<UIElement> uiElements = new List<UIElement>();
+    public List<UIBaseElement> uiElements = new List<UIBaseElement>();
 
     public string defaultUI = UIPath.UIIdle;
 
@@ -39,6 +39,7 @@ public partial class UIController : MonoSingleton<UIController>
     public void Init()
     {
         _openedUIs = new HashSet<string>();
+        string uiPath = UIPath.UIIdle;
         foreach (var ui in uiElements)
         {
             var attributes = ui.GetType().GetCustomAttributes(typeof(UI), false);
@@ -49,12 +50,12 @@ public partial class UIController : MonoSingleton<UIController>
                     var uiAttribute = (UI)attribute;
                     if (uiAttribute != null)
                     {
-                        ui.SelfUIName = uiAttribute.Name;
+                        uiPath = uiAttribute.Name;
                     }
                 }
             }
             //Debug.Log("name:"+ name);
-            uis.Add(ui.SelfUIName,ui);
+            uis.Add(uiPath,ui);
             ((IUIElement)ui).Init();
         }
         this.ResetUI();
@@ -63,60 +64,66 @@ public partial class UIController : MonoSingleton<UIController>
     public void ResetUI()
     {
         _isChangingCurrentUI = false;
-        if (_currentCancellationToken != null)
+        CancelChangeUIToken();
+        foreach (var ui in uis)
         {
-            _currentCancellationToken.Cancel();
-        }
-        _currentCancellationToken = new CancellationTokenSource();
-        foreach (var ui in uiElements)
-        {
-           var contains = _openedUIs.Contains(ui.SelfUIName);
+           var contains = _openedUIs.Contains(ui.Key);
             if (contains)
             {
-                CloseUI(ui.SelfUIName);
+                CloseUI(ui.Key).Forget();
             }
             else
             {
-                ((IUIElement)ui).SetActive(false); 
+                ui.Value.SetActive(false); 
             }
         }
         _previousUI = "";
         OpenUI(defaultUI,true);
         foreach (string ui in defaultUIs)
         {
-            OpenUI(ui,0);
+            OpenUI(ui, false);
         }
         SignalSevices.OnResetUI?.Dispatch();
     }
 
+    private void CancelChangeUIToken()
+    {
+        if (_currentCancellationToken != null)
+        {
+            _currentCancellationToken.Cancel();
+        }
+        _currentCancellationToken = new CancellationTokenSource();
+    }
+
     public async UniTask ChangeUI(string uiName)
     {
-        if (_isChangingCurrentUI)
-        {
-            Debug.Log(uiName + "页面无法切换因为" + _currentUI + "正在切换");
-            return;
-        }
         if (!uis.ContainsKey(uiName))
         {
             Debug.LogError(uiName + "UI不存在");
             return;
         }
-        if (_currentUI != "" && uis.ContainsKey(_currentUI))
+        if (_isChangingCurrentUI)
         {
-            _openedUIs.Remove(_currentUI);
-            uis[_currentUI].OnCloseUI();
-            _isChangingCurrentUI = true;
-            await UniTask.Delay(TimeSpan.FromSeconds(uis[uiName].DisappearTime), ignoreTimeScale: false, cancellationToken: _currentCancellationToken.Token);
-            //await UniTask.Delay(TimeSpan.FromSeconds(uis[uiName].DisappearTime), ignoreTimeScale: false);
-            _isChangingCurrentUI = false;
-            uis[_currentUI].OnCloseOverDisappearTimeUI();
-            uis[_currentUI].SetActive(false);
+            CancelChangeUIToken();
+            uis[_previousUI].OnCloseOverDisappearTimeUI();
+            uis[_previousUI].SetActive(false);
+            uis[_currentUI].SetActive(true);
         }
-        uis[uiName].SetActive(true);
-        uis[uiName].OnOpenUI();
         _previousUI = _currentUI;
         _currentUI = uiName;
-        _openedUIs.Add(uiName);
+        _openedUIs.Add(_currentUI);
+        if (_previousUI != "" && uis.ContainsKey(_previousUI))
+        {
+            _openedUIs.Remove(_previousUI);
+            uis[_previousUI].OnCloseUI();
+            _isChangingCurrentUI = true;
+            await UniTask.Delay(TimeSpan.FromSeconds(uis[_currentUI].DisappearTime), ignoreTimeScale: false, cancellationToken: _currentCancellationToken.Token);
+            _isChangingCurrentUI = false;
+            uis[_previousUI].OnCloseOverDisappearTimeUI();
+            uis[_previousUI].SetActive(false);
+        }
+        uis[_currentUI].SetActive(true);
+        uis[_currentUI].OnOpenUI();
     }
     
     public async UniTask OpenUI(string uiName, float delay = 0)
@@ -140,11 +147,6 @@ public partial class UIController : MonoSingleton<UIController>
         }
         if (isCurrentMainUI)
         {
-            if (_isChangingCurrentUI)
-            {
-                Debug.Log(uiName + "页面无法切换因为" + _currentUI + "正在切换");
-                return;
-            }
             _currentUI = uiName;
         }
         _openedUIs.Add(uiName);
@@ -174,7 +176,7 @@ public partial class UIController : MonoSingleton<UIController>
         return true;
     }
 
-    public T GetUI<T>(string uiName) where T : UIElement
+    public T GetUI<T>(string uiName) where T : UIBaseElement
     {
         if (uis.TryGetValue(uiName, out var ui))
         {
@@ -205,6 +207,7 @@ public struct UIPath
     public const string UIExample2 = "UIExample2";
     public const string UIExample3 = "UIExample3";
     public const string UIExample4 = "UIExample4";
+    public const string UISelector = "UISelector";
 }
 
 #if L2

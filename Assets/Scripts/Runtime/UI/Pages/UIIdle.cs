@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [UI(UIPath.UIIdle)]
-public class UIIdle : UIElement
+public class UIIdle : UIBaseElement
 {
     public Button button1;
     public Button button2;

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [UI(UIPath.UIExample4)]
-public class UIExample4 : UIElement
+public class UIExample4 : UIBaseElement
 {
 
 }
