@@ -90,7 +90,7 @@ public class UIAnimator : MonoBehaviour
         _isInit = true;
     }
 
-    public void AnimateUIElements()
+    public float AnimateUIElements()
     {
         if (!_isInit)
         {
@@ -167,9 +167,10 @@ public class UIAnimator : MonoBehaviour
                     break;
             }
         }
+        return uiElements.Length > 0 ? uiElements.Length * delayBetweenElements + duration : 0;
     }
 
-    public void AnimateUIElementsOut()
+    public float AnimateUIElementsOut()
     {
         for (int i = 0; i < uiElements.Length; i++)
         {
@@ -193,7 +194,7 @@ public class UIAnimator : MonoBehaviour
                     break;
                 case AnimationType.Fade: // 淡出
                     if (hasScaleChange)
-                        element.transform.DOScale(_originalScales[i], duration).SetDelay(i * delayBetweenElements);
+                        element.transform.DOScale(_originalScales[i], duration);
                     canvasGroup.DOFade(0, duration);
                     break;
 
@@ -234,6 +235,7 @@ public class UIAnimator : MonoBehaviour
                 _disableCoroutine = StartCoroutine(DisableElementAfterAnimation(element, duration));
             }
         }
+        return uiElements.Length > 0 ? duration : 0;
     }
 
     private System.Collections.IEnumerator DisableElementAfterAnimation(GameObject element, float waitTime)

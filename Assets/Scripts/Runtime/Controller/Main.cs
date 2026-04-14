@@ -7,7 +7,7 @@ public class Main : MonoSingleton<Main>
     
     private void Start()
     {
-        Init();
+        Init().Forget();
     }
     
     protected virtual async UniTask Init()

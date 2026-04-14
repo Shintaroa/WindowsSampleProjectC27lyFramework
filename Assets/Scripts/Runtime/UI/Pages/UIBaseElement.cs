@@ -1,17 +1,19 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 #if MOREMOUNTAINS_FEEDBACKS
     using MoreMountains.Feedbacks;
 #endif
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public interface IUIElement
 {
     float DisappearTime { get; }
     void Init(){}
-    void OnOpenUI();
-    void OnCloseUI();
+    UniTask OnOpenUI();
+    UniTask OnCloseUI();
     void OnCloseOverDisappearTimeUI();
     void SetActive(bool isActive);
 }
@@ -25,7 +27,7 @@ public class UIBaseElement : MonoBehaviour,IUIElement
 #endif
     
 #if MOREMOUNTAINS_FEEDBACKS
-    public MMFeedbacks openedAnimationMMFeedbacks;
+    public AsyncMMFeedbacks openedAnimationMMFeedbacks;
     public MMFeedbacks closedAnimationMMFeedbacks;
 #endif
     
@@ -35,18 +37,20 @@ public class UIBaseElement : MonoBehaviour,IUIElement
 
     public float DisappearTime => disappearTime;
 
+    private CancellationTokenSource _cancellationToken = new();
+    
     #region
     void IUIElement.Init()
     {
         Init();
     }
-    void IUIElement.OnOpenUI()
+    async UniTask IUIElement.OnOpenUI()
     {
-        OnOpenUI();
+        await OnOpenUI();
     }
-    void IUIElement.OnCloseUI()
+    async UniTask IUIElement.OnCloseUI()
     {
-        OnCloseUI();
+        await OnCloseUI();
     }
     void IUIElement.OnCloseOverDisappearTimeUI()
     {
@@ -59,20 +63,25 @@ public class UIBaseElement : MonoBehaviour,IUIElement
     #endregion
 
 
-    protected virtual void Init(){}
-    
-    protected virtual void OnOpenUI()
+    protected virtual void Init()
     {
-        this.PlayOpenedAnimation();
+        _cancellationToken = new();
+    }
+    
+    protected virtual async UniTask OnOpenUI()
+    {
         if (backButton)
             this.backButton.onClick.AddListener(OnBackButtonClicked);
+        await this.PlayOpenedAnimation();
     }
 
-    protected virtual void OnCloseUI()
+    protected virtual async UniTask OnCloseUI()
     {
-        this.PlayClosedAnimation();
         if (backButton)
             this.backButton.onClick.RemoveListener(OnBackButtonClicked);
+        await this.PlayClosedAnimation();
+        _cancellationToken.Cancel();
+        _cancellationToken = new();
     }
 
     protected virtual void OnCloseOverDisappearTimeUI()
@@ -80,30 +89,36 @@ public class UIBaseElement : MonoBehaviour,IUIElement
         
     }
 
-    protected virtual void PlayOpenedAnimation()
+    protected virtual async UniTask PlayOpenedAnimation()
     {
 #if DOTWEEN
         if (uiAnimator && uiAnimator.isActiveAndEnabled)
         {
-            uiAnimator?.AnimateUIElements();
+            float waitTime = uiAnimator.AnimateUIElements();
+            await UniTask.Delay(TimeSpan.FromSeconds(waitTime),ignoreTimeScale:false,cancellationToken:_cancellationToken.Token);
         }
 #endif
 #if MOREMOUNTAINS_FEEDBACKS
-        openedAnimationMMFeedbacks?.PlayFeedbacks();
+        if (openedAnimationMMFeedbacks != null)
+        {
+            await openedAnimationMMFeedbacks.PlayFeedbacksAsync();
+        }
 #endif
+        await UniTask.Yield();
     }
 
-    protected virtual void PlayClosedAnimation()
+    protected virtual async UniTask PlayClosedAnimation()
     {
 #if DOTWEEN
         if (uiAnimator && uiAnimator.isActiveAndEnabled)
         {
-            uiAnimator?.AnimateUIElementsOut();
+            uiAnimator.AnimateUIElementsOut();
         }
 #endif
 #if MOREMOUNTAINS_FEEDBACKS
         closedAnimationMMFeedbacks?.PlayFeedbacks();
 #endif
+        await UniTask.Yield();
     }
     
     protected virtual void OnBackButtonClicked()

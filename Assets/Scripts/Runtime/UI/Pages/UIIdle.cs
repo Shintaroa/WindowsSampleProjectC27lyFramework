@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,18 +12,18 @@ public class UIIdle : UIBaseElement
     public Button button3;
     public Button button4;
 
-    protected override void OnOpenUI()
+    protected override async UniTask OnOpenUI()
     {
-        base.OnOpenUI();
+        await base.OnOpenUI();
         button1.onClick.AddListener(OnButton1Click);
         button2.onClick.AddListener(OnButton2Click);
         button3.onClick.AddListener(OnButton3Click);
         button4.onClick.AddListener(OnButton4Click);
     }
 
-    protected override void OnCloseUI()
+    protected override async UniTask OnCloseUI()
     {
-        base.OnCloseUI();
+        await base.OnCloseUI();
         button1.onClick.RemoveListener(OnButton1Click);
         button2.onClick.RemoveListener(OnButton2Click);
         button3.onClick.RemoveListener(OnButton3Click);
@@ -31,21 +32,21 @@ public class UIIdle : UIBaseElement
 
     private void OnButton1Click()
     {
-        UIController.Instance.ChangeUI(UIPath.UIExample1);
+        UIController.Instance.ChangeUI(UIPath.UIExample1).Forget();
     }
     
     private void OnButton2Click()
     {
-        UIController.Instance.ChangeUI(UIPath.UIExample2);
+        UIController.Instance.ChangeUI(UIPath.UIExample2).Forget();
     }
     
     private void OnButton3Click()
     {
-        UIController.Instance.ChangeUI(UIPath.UIExample3);
+        UIController.Instance.ChangeUI(UIPath.UIExample3).Forget();
     }
     
     private void OnButton4Click()
     {
-        UIController.Instance.ChangeUI(UIPath.UIExample4);
+        UIController.Instance.ChangeUI(UIPath.UIExample4).Forget();
     }
 }

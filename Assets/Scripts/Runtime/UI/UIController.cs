@@ -8,7 +8,14 @@ using I2.Loc;
 #endif
 using UnityEngine;
 
-//todo:这些代码要加一个正在切换的状态需要使用unitask进行优化
+public enum ClashMethod
+{
+    None,
+    QuitLast,
+    Ban,
+    Ignore
+}
+
 //todo:需要一个yooasset来进行加载和内存释放
 public partial class UIController : MonoSingleton<UIController>
 {
@@ -20,6 +27,7 @@ public partial class UIController : MonoSingleton<UIController>
 
     public List<string> defaultUIs = new ();
     
+    public ClashMethod defaultClashMethod = ClashMethod.QuitLast;
     //TODO:这里做一个ui在启动时就从ab包中缓存并且一直存在的列表 改造还需要继续2026/1/5
 
     public string CurrentUI => _currentUI;
@@ -95,7 +103,7 @@ public partial class UIController : MonoSingleton<UIController>
         _currentCancellationToken = new CancellationTokenSource();
     }
 
-    public async UniTask ChangeUI(string uiName)
+    public async UniTask ChangeUI(string uiName, ClashMethod clashMethod = ClashMethod.None)
     {
         if (!uis.ContainsKey(uiName))
         {
@@ -104,10 +112,11 @@ public partial class UIController : MonoSingleton<UIController>
         }
         if (_isChangingCurrentUI)
         {
-            CancelChangeUIToken();
-            uis[_previousUI].OnCloseOverDisappearTimeUI();
-            uis[_previousUI].SetActive(false);
-            uis[_currentUI].SetActive(true);
+            clashMethod = clashMethod == ClashMethod.None ? defaultClashMethod : clashMethod;
+            if (FixClash(clashMethod))
+            {
+                return;
+            }
         }
         _previousUI = _currentUI;
         _currentUI = uiName;
@@ -115,7 +124,7 @@ public partial class UIController : MonoSingleton<UIController>
         if (_previousUI != "" && uis.ContainsKey(_previousUI))
         {
             _openedUIs.Remove(_previousUI);
-            uis[_previousUI].OnCloseUI();
+            uis[_previousUI].OnCloseUI().Forget();
             _isChangingCurrentUI = true;
             await UniTask.Delay(TimeSpan.FromSeconds(uis[_currentUI].DisappearTime), ignoreTimeScale: false, cancellationToken: _currentCancellationToken.Token);
             _isChangingCurrentUI = false;
@@ -123,9 +132,74 @@ public partial class UIController : MonoSingleton<UIController>
             uis[_previousUI].SetActive(false);
         }
         uis[_currentUI].SetActive(true);
-        uis[_currentUI].OnOpenUI();
+        uis[_currentUI].OnOpenUI().Forget();
     }
-    
+
+    private bool FixClash(ClashMethod clashMethod)
+    {
+        switch (clashMethod)
+        {
+            case ClashMethod.QuitLast:
+                CancelChangeUIToken();
+                uis[_previousUI].OnCloseOverDisappearTimeUI();
+                uis[_previousUI].SetActive(false);
+                uis[_currentUI].SetActive(true);
+                break;
+            case ClashMethod.Ban:
+                return true;
+            case ClashMethod.Ignore:
+                break;
+        }
+        return false;
+    }
+
+    public async UniTask ChangeUI(string uiName, float disappearTime, float appearTime = 0.0f, ClashMethod clashMethod = ClashMethod.None)
+    {
+        if (!uis.ContainsKey(uiName))
+        {
+            Debug.LogError(uiName + "UI不存在");
+            return;
+        }
+        if (_isChangingCurrentUI)
+        {
+            clashMethod = clashMethod == ClashMethod.None ? defaultClashMethod : clashMethod;
+            if (FixClash(clashMethod))
+            {
+                return;
+            }
+        }
+        _previousUI = _currentUI;
+        _currentUI = uiName;
+        _openedUIs.Add(_currentUI);
+        var tasks = new List<UniTask>();
+        if (_previousUI != "" && uis.ContainsKey(_previousUI))
+        {
+            _openedUIs.Remove(_previousUI);
+            uis[_previousUI].OnCloseUI().Forget();
+            _isChangingCurrentUI = true;
+            UniTask taskForClosing = CloseUIForChanging(disappearTime);
+            tasks.Add(taskForClosing);
+        }
+        UniTask taskForOpening = OpenUIForChanging(appearTime);
+        tasks.Add(taskForOpening);
+        await UniTask.WhenAll(tasks);
+        _isChangingCurrentUI = false;
+    }
+
+    private async UniTask CloseUIForChanging(float disappearTime)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(disappearTime), ignoreTimeScale: false, cancellationToken: _currentCancellationToken.Token);
+        uis[_previousUI].OnCloseOverDisappearTimeUI();
+        uis[_previousUI].SetActive(false);
+    }
+
+    private async UniTask OpenUIForChanging(float appearTime)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(appearTime), ignoreTimeScale: false, cancellationToken: _currentCancellationToken.Token);
+        uis[_currentUI].SetActive(true);
+        uis[_currentUI].OnOpenUI().Forget();
+    }
+
     public async UniTask OpenUI(string uiName, float delay = 0)
     {
         if (delay <= 0)
@@ -160,7 +234,7 @@ public partial class UIController : MonoSingleton<UIController>
         {
             return;
         }
-        uis[uiName].OnCloseUI();
+        uis[uiName].OnCloseUI().Forget();
         _openedUIs.Remove(uiName);
         await UniTask.Delay(TimeSpan.FromSeconds(uis[uiName].DisappearTime), ignoreTimeScale: false);
         uis[uiName].SetActive(false);

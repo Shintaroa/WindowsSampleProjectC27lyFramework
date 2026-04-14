@@ -13,24 +13,31 @@ public class UISelector : UIBaseElement
         public string uiName;
         internal void OnClick()
         {
-            UIController.Instance.ChangeUI(uiName).Forget();
+            if (uiName == UIPath.UIExample3)
+            {
+                UIController.Instance.ChangeUI(uiName,5,1).Forget();
+            }
+            else
+            {
+                UIController.Instance.ChangeUI(uiName).Forget();
+            }
         }
     }
 
     public List<Item> items = new List<Item>();
 
-    protected override void OnOpenUI()
+    protected override async UniTask OnOpenUI()
     {
-        base.OnOpenUI();
+        await base.OnOpenUI();
         foreach (var item in items)
         {
             item.button.onClick.AddListener(item.OnClick);
         }
     }
     
-    protected override void OnCloseUI()
+    protected override async UniTask OnCloseUI()
     {
-        base.OnCloseUI();
+        await base.OnCloseUI();
         foreach (var item in items)
         {
             item.button.onClick.RemoveListener(item.OnClick);
