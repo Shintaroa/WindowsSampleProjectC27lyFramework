@@ -66,6 +66,12 @@ public class UIBaseElement : MonoBehaviour,IUIElement
     protected virtual void Init()
     {
         _cancellationToken = new();
+#if MOREMOUNTAINS_FEEDBACKS
+        if (openedAnimationMMFeedbacks != null && openedAnimationMMFeedbacks.InitializationMode == MMFeedbacks.InitializationModes.Script)
+        {
+            openedAnimationMMFeedbacks.Initialization(openedAnimationMMFeedbacks.gameObject);
+        }
+#endif
     }
     
     protected virtual async UniTask OnOpenUI()
@@ -80,13 +86,12 @@ public class UIBaseElement : MonoBehaviour,IUIElement
         if (backButton)
             this.backButton.onClick.RemoveListener(OnBackButtonClicked);
         await this.PlayClosedAnimation();
-        _cancellationToken.Cancel();
-        _cancellationToken = new();
     }
 
     protected virtual void OnCloseOverDisappearTimeUI()
     {
-        
+        _cancellationToken.Cancel();
+        _cancellationToken = new();
     }
 
     protected virtual async UniTask PlayOpenedAnimation()
@@ -101,7 +106,7 @@ public class UIBaseElement : MonoBehaviour,IUIElement
 #if MOREMOUNTAINS_FEEDBACKS
         if (openedAnimationMMFeedbacks != null)
         {
-            await openedAnimationMMFeedbacks.PlayFeedbacksAsync();
+            await openedAnimationMMFeedbacks.PlayFeedbacksAsync(_cancellationToken.Token);
         }
 #endif
         await UniTask.Yield();

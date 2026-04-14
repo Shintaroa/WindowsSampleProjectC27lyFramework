@@ -1473,7 +1473,7 @@ MonoBehaviour:
   - {fileID: 959783078}
   - {fileID: 959783079}
   - {fileID: 959783080}
-  InitializationMode: 1
+  InitializationMode: 0
   SafeMode: 3
   AutoPlayOnStart: 0
   DebugActive: 0
@@ -1565,7 +1565,7 @@ MonoBehaviour:
   Chance: 100
   Timing:
     TimescaleMode: 0
-    InitialDelay: 20
+    InitialDelay: 5
     CooldownDuration: 0
     NumberOfRepeats: 0
     RepeatForever: 0
@@ -1595,7 +1595,7 @@ MonoBehaviour:
   Chance: 100
   Timing:
     TimescaleMode: 0
-    InitialDelay: 20
+    InitialDelay: 5
     CooldownDuration: 0
     NumberOfRepeats: 0
     RepeatForever: 0

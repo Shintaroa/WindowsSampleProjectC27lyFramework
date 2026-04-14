@@ -17,6 +17,12 @@ using MoreMountains.Feedbacks;
     {
         private CancellationTokenSource _cancellationTokenSource = new ();
 
+        public override void Initialization()
+        {
+            _cancellationTokenSource = new CancellationTokenSource();
+            base.Initialization();
+        }
+        
         public override void Initialization(GameObject owner)
         {
             _cancellationTokenSource = new CancellationTokenSource();
@@ -38,13 +44,12 @@ using MoreMountains.Feedbacks;
         /// Waits for all feedbacks to complete before returning.
         /// </summary>
         /// <param name="position">Position for the feedbacks</param>
-        /// <param name="attenuation">Attenuation factor for the feedbacks</param>
+        /// <param name="attenuation">Attenuation factor for the feedbacks</param> 
+        /// <param name="cancellationToken"></param>
         /// <returns>A UniTask that completes when all feedbacks have finished playing</returns>
         public virtual async UniTask PlayFeedbacksAsync(Vector3 position, float attenuation = 1.0f,CancellationToken cancellationToken = default(CancellationToken))
         {
-            using (var linkedCts =
-                   CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token, cancellationToken))
-            {
+          
                 // if this MMFeedbacks is disabled in any way, we stop and don't play
                 if (!isActiveAndEnabled)
                 {
@@ -56,63 +61,68 @@ using MoreMountains.Feedbacks;
                 {
                     return;
                 }
-
+              
                 _startTime = Time.time;
                 _holdingMax = 0f;
                 _lastStartAt = _startTime;
 
                 ResetFeedbacks();
-
-                // Test if a pause or holding pause is found
-                bool pauseFound = false;
-                for (int i = 0; i < Feedbacks.Count; i++)
+                using (var linkedCts =
+                       CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token, cancellationToken))
                 {
-                    if ((Feedbacks[i].Pause != null) && (Feedbacks[i].Active))
-                    {
-                        pauseFound = true;
-                    }
-
-                    if ((Feedbacks[i].HoldingPause == true) && (Feedbacks[i].Active))
-                    {
-                        pauseFound = true;
-                    }
-                }
-
-                if (!pauseFound)
-                {
-                    // If no pause was found, we just play all feedbacks at once
-                    IsPlaying = true;
+                    var token = linkedCts.Token;
+                    // Test if a pause or holding pause is found
+                    bool pauseFound = false;
                     for (int i = 0; i < Feedbacks.Count; i++)
                     {
-                        Feedbacks[i].Play(position, attenuation);
-                    }
-
-                    await UniTask.WaitUntil(() =>
-                    {
-                        bool r = true;
-                        foreach (var feedback in Feedbacks)
+                        if ((Feedbacks[i].Pause != null) && (Feedbacks[i].Active))
                         {
-                            if (feedback)
-                            {
-                                if (feedback.FeedbackPlaying || feedback.FeedbackDelaying)
-                                {
-                                    r = false;
-                                    break;
-                                }
-
-                            }
+                            pauseFound = true;
                         }
 
-                        return r;
-                    }, cancellationToken: linkedCts.Token);
-                    IsPlaying = false;
+                        if ((Feedbacks[i].HoldingPause == true) && (Feedbacks[i].Active))
+                        {
+                            pauseFound = true;
+                        }
+                    }
+
+                    if (!pauseFound)
+                    {
+                        // If no pause was found, we just play all feedbacks at once
+                        IsPlaying = true;
+                        for (int i = 0; i < Feedbacks.Count; i++)
+                        {
+                            Feedbacks[i].Play(position, attenuation);
+                        }
+
+                        Debug.Log("1");
+                        await UniTask.WaitUntil(() =>
+                        {
+                            bool r = true;
+                            foreach (var feedback in Feedbacks)
+                            {
+                                if (feedback)
+                                {
+                                    if (feedback.FeedbackPlaying || feedback.FeedbackDelaying)
+                                    {
+                                        r = false;
+                                        break;
+                                    }
+
+                                }
+                            }
+
+                            return r;
+                        }, cancellationToken: token);
+                        IsPlaying = false;
+                        Debug.Log("2");
+                    }
+                    else
+                    {
+                        // If at least one pause was found
+                        await PausedFeedbacksAsync(position, attenuation, token);
+                    }
                 }
-                else
-                {
-                    // If at least one pause was found
-                    await PausedFeedbacksAsync(position, attenuation,linkedCts.Token);
-                }
-            }
         }
 
         /// <summary>
@@ -120,6 +130,7 @@ using MoreMountains.Feedbacks;
         /// </summary>
         /// <param name="position">Position for the feedbacks</param>
         /// <param name="attenuation">Attenuation factor for the feedbacks</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>A UniTask that completes when all paused feedbacks have finished playing</returns>
         protected virtual async UniTask PausedFeedbacksAsync(Vector3 position, float attenuation,CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -221,6 +232,15 @@ using MoreMountains.Feedbacks;
             yield return yieldInstruction;
         }
 
+        public override void StopFeedbacks()
+        {
+            for (int i = 0; i < Feedbacks.Count; i++)
+            {
+                Feedbacks[i].Stop(this.transform.position, 1.0f);
+            }
+            IsPlaying = false;
+        }
+        
         public override void StopFeedbacks(Vector3 position, float attenuation = 1.0f)
         {
             for (int i = 0; i < Feedbacks.Count; i++)
@@ -238,8 +258,8 @@ using MoreMountains.Feedbacks;
             {
                 Feedbacks[i].ResetFeedback();
             }
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource = new CancellationTokenSource();
+            /*_cancellationTokenSource.Cancel();
+            _cancellationTokenSource = new CancellationTokenSource();*/
             IsPlaying = false;
         }
 
