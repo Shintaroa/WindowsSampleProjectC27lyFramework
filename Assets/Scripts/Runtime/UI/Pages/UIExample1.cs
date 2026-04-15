@@ -18,9 +18,9 @@ public class UIExample1 : UIBaseElement
         whiteSquare.SetActive(true);
     }
 
-    protected override async UniTask OnCloseUI()
+    protected override void OnCloseOverDisappearTimeUI()
     {
-        await base.OnCloseUI();
+        base.OnCloseOverDisappearTimeUI();
         whiteSquare.SetActive(false);
     }
 }

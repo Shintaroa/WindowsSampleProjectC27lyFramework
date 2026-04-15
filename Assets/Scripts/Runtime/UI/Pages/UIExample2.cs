@@ -14,13 +14,12 @@ public class UIExample2 : UIBaseElement
         if (backButton)
             this.backButton.onClick.AddListener(OnBackButtonClicked);
         await this.PlayOpenedAnimation();
-        Debug.Log(" whiteSquare.SetActive(true);");
         whiteSquare.SetActive(true);
     }
     
-    protected override async UniTask OnCloseUI()
+    protected override void OnCloseOverDisappearTimeUI()
     {
-        await base.OnCloseUI();
+        base.OnCloseOverDisappearTimeUI();
         whiteSquare.SetActive(false);
     }
 }
