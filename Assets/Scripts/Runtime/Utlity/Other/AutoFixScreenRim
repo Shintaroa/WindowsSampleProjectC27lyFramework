@@ -1,0 +1,168 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+
+/// <summary>
+/// TextMeshProUGUI 字符位置计算工具类
+/// </summary>
+public class AutoFixScreenRim : MonoBehaviour
+{
+    public int column = 4;
+    public float rimWidth = 10;
+    public float firstOffsetColumn = 5;
+    //public int row = 2;
+    private TMP_Text _tmp;
+    private Canvas _canvas;
+    private RectTransform _canvasRect;
+    private bool _forceUpdate;
+    private float _halfRimWidth;
+    
+    private void Awake()
+    {
+        _tmp = GetComponent<TMP_Text>();
+        _canvas = _tmp.GetComponentInParent<Canvas>();
+        _canvasRect = _canvas.GetComponent<RectTransform>();
+        _halfRimWidth = rimWidth * 0.5f;
+        //target =  GetComponent<RectTransform>();
+    }
+
+    private void OnEnable()
+    {
+        _forceUpdate = true;
+    }
+
+    private void Update()
+    {
+        if (!_forceUpdate && !_tmp.havePropertiesChanged)
+        {
+            return;
+        }
+       
+        CalculateCharacterPositions();
+    }
+
+    private void CalculateCharacterPositions()
+    {
+        if (_tmp == null || !_tmp.isActiveAndEnabled)
+        {
+            Debug.LogWarning("TextMeshProUGUI 组件为空或未激活");
+            return;
+        }
+        
+        _forceUpdate = false;
+        _tmp.ForceMeshUpdate();
+        TMP_TextInfo textInfo = _tmp.textInfo;
+        
+        float canvasWidth = _canvasRect.rect.width;
+        float canvasEachWidth = canvasWidth / column;
+        
+        RectTransform rectTransform = _tmp.rectTransform;
+        var canvasAnchoredPosition = GetPositionInCanvas(_canvas, _canvasRect, rectTransform);
+        
+        Vector2 pivot = rectTransform.pivot;
+        var left = canvasAnchoredPosition.x - pivot.x * rectTransform.rect.size.x;
+        var right = canvasAnchoredPosition.x + (1 - pivot.x) * rectTransform.rect.size.x;
+        var overlapColumn = GetOverlapPosition(canvasEachWidth,new Vector2(left, right),column, _halfRimWidth);
+
+       
+        
+        if (overlapColumn.Count > 0)
+        {
+            float lineOffsetX = 0;
+            int previousCharacterCount = 0;
+            for (int i = 0; i < textInfo.lineCount; i++)
+            {
+                float offsetX = 0;
+                TMP_LineInfo lineInfo = textInfo.lineInfo[i];
+                string sentence = "";
+                foreach (var columnPosition in overlapColumn)
+                {
+                    for (int j = 0; j < lineInfo.characterCount; j++)
+                    {
+                        if (!textInfo.characterInfo[previousCharacterCount + j].isVisible)
+                        {
+                            continue;
+                        }
+
+                        TMP_CharacterInfo charInfo = textInfo.characterInfo[previousCharacterCount + j];
+                        sentence += charInfo.character;
+                        
+                        float characterLeftPosition = charInfo.topLeft.x + canvasAnchoredPosition.x;
+                        float characterRightPosition = charInfo.topRight.x + canvasAnchoredPosition.x;
+                        if (columnPosition >= characterLeftPosition - _halfRimWidth + lineOffsetX && columnPosition <= characterRightPosition + _halfRimWidth + lineOffsetX)
+                        {
+                            if (Mathf.Approximately(offsetX, 0))
+                            {
+                                offsetX = firstOffsetColumn + Mathf.Abs((columnPosition + rimWidth * 0.5f) - (characterLeftPosition + lineOffsetX));
+                            }
+                            else
+                            {
+                                offsetX += Mathf.Abs((columnPosition + rimWidth * 0.5f) - (characterLeftPosition + lineOffsetX));
+                            }
+                            lineOffsetX += offsetX;
+                        }
+
+                        int materialIndex = textInfo.characterInfo[previousCharacterCount + j].materialReferenceIndex;
+                        int vertexIndex = textInfo.characterInfo[previousCharacterCount + j].vertexIndex;
+                        Vector3[] vertices = textInfo.meshInfo[materialIndex].vertices;
+
+                        Vector3 charOffset = new Vector3(offsetX, 0, 0);
+
+                        vertices[vertexIndex] += charOffset;
+                        vertices[vertexIndex + 1] += charOffset;
+                        vertices[vertexIndex + 2] += charOffset;
+                        vertices[vertexIndex + 3] += charOffset;
+                    }
+                    offsetX = 0;
+                }
+                lineOffsetX = 0;
+                Debug.Log("行"+i+"   : " + sentence);
+                previousCharacterCount += lineInfo.characterCount;
+            }
+            
+            _tmp.UpdateVertexData();
+        }
+    }
+
+    private Vector2 GetPositionInCanvas(Canvas canvas,RectTransform canvasRect,RectTransform rectTransform)
+    {
+        Camera cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        Vector3 tmpWorldPos = rectTransform.position;
+        Vector2 tmpScreenPoint = RectTransformUtility.WorldToScreenPoint(cam, tmpWorldPos);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, tmpScreenPoint, cam, out Vector2 tmpAnchoredPos);
+        Debug.Log("TMP position in Canvas: " + tmpAnchoredPos);
+        return tmpAnchoredPos;
+    }
+
+    private List<float> GetOverlapPosition(float eachWidth, Vector2 range, int number, float gap)
+    {
+        List<float> overlap = new List<float>(number);
+        for (int i = 0; i < number; i++)
+        {
+            var columnPosition = (i - number * 0.5f) * eachWidth;
+            bool isOverlap = columnPosition - gap <= range.y && columnPosition + gap > range.x;
+
+            if (isOverlap)
+            {
+                Debug.Log($"Text overlaps column {i}, columnPosition={columnPosition}, text=[{range.y},{range.x}]");
+                overlap.Add(columnPosition);
+            }
+        }
+        return overlap;
+    }
+
+    private void OnValidate()
+    {
+        _forceUpdate = true;
+    }
+
+    public void Refresh()
+    {
+        _forceUpdate = true;
+    }
+
+}
